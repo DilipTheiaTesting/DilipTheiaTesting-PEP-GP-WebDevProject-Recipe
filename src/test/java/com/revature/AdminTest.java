@@ -1,7 +1,9 @@
 package com.revature;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.File;
 import java.time.Duration;
@@ -490,30 +492,27 @@ public class AdminTest {
      * 
      * @throws InterruptedException
      */
+    /**
+     * Admin link should exist when the logged-in user is an admin.
+     */
     @Test
     public void adminLinkTest() throws InterruptedException {
-        // go to relevant HTML page
-        File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
-        String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
-        driver.get(loginPath);
+        driver.get("http://localhost:8083/login/login-page.html");
 
-        // perform login functionality
         WebElement usernameInput = driver.findElement(By.id("login-input"));
         WebElement passwordInput = driver.findElement(By.id("password-input"));
         WebElement loginButton = driver.findElement(By.id("login-button"));
+
         usernameInput.sendKeys("ChefTrevin");
         passwordInput.sendKeys("trevature");
         loginButton.click();
 
-        // ensure we navigate to appropriate webpage
-        wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
+        wait.until(ExpectedConditions.urlContains("recipe-page"));
 
-        // check that role value is 'false' in session storage
-        assertTrue((js.executeScript(String.format(
-                "return window.sessionStorage.getItem('%s');", "is-admin")).equals("true")));
+        String isAdmin = (String) js.executeScript("return window.sessionStorage.getItem('is-admin');");
+        assertEquals("true", isAdmin);
 
         WebElement adminLink = driver.findElement(By.id("admin-link"));
-        // verify that there are no admin links because the user is not an admin.
         Assert.assertTrue(adminLink.isDisplayed());
 
         performLogout();
@@ -525,39 +524,33 @@ public class AdminTest {
      */
     @Test
     public void displayIngredientsOnInitTest() throws InterruptedException {
-        // go to relevant HTML page
-        File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
-        String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
-        driver.get(loginPath);
+        driver.get("http://localhost:8083/login/login-page.html");
 
-        // perform login functionality
         WebElement usernameInput = driver.findElement(By.id("login-input"));
         WebElement passwordInput = driver.findElement(By.id("password-input"));
         WebElement loginButton = driver.findElement(By.id("login-button"));
+
         usernameInput.sendKeys("ChefTrevin");
         passwordInput.sendKeys("trevature");
         loginButton.click();
 
-        // ensure we navigate to appropriate webpage
-        wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-
-        // click on link to go to ingredients page
+        wait.until(ExpectedConditions.urlContains("recipe-page"));
         Thread.sleep(1000);
-        WebElement adminLink = driver.findElement(By.id("admin-link"));
-        adminLink.click();
 
+        driver.findElement(By.id("admin-link")).click();
         Thread.sleep(1000);
+
         WebElement list = driver.findElement(By.id("ingredient-list"));
-        String innerString = list.getAttribute("innerHTML");
-        Assert.assertTrue(innerString.contains("carrot"));
-        Assert.assertTrue(innerString.contains("potato"));
-        Assert.assertTrue(innerString.contains("tomato"));
-        Assert.assertTrue(innerString.contains("lemon"));
-        Assert.assertTrue(innerString.contains("rice"));
-        Assert.assertTrue(innerString.contains("stone"));
+        String innerHTML = list.getAttribute("innerHTML");
 
-        WebElement backLink = driver.findElement(By.id("back-link"));
-        backLink.click();
+        Assert.assertTrue(innerHTML.contains("carrot"));
+        Assert.assertTrue(innerHTML.contains("potato"));
+        Assert.assertTrue(innerHTML.contains("tomato"));
+        Assert.assertTrue(innerHTML.contains("lemon"));
+        Assert.assertTrue(innerHTML.contains("rice"));
+        Assert.assertTrue(innerHTML.contains("stone"));
+
+        driver.findElement(By.id("back-link")).click();
         Thread.sleep(1000);
 
         performLogout();
@@ -566,50 +559,37 @@ public class AdminTest {
     /**
      * The site should send a request to persist the ingredient after the recipe is
      * submitted.
-     * 
-     * @throws InterruptedException
      */
     @Test
     public void addIngredientPostTest() throws InterruptedException {
-        // go to relevant HTML page
-        File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
-        String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
-        driver.get(loginPath);
+        driver.get("http://localhost:8083/login/login-page.html");
 
-        // perform login functionality
         WebElement usernameInput = driver.findElement(By.id("login-input"));
         WebElement passwordInput = driver.findElement(By.id("password-input"));
         WebElement loginButton = driver.findElement(By.id("login-button"));
+
         usernameInput.sendKeys("ChefTrevin");
         passwordInput.sendKeys("trevature");
         loginButton.click();
 
-        // ensure we navigate to appropriate webpage
-        wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-
-        // click on link to go to ingredients page
+        wait.until(ExpectedConditions.urlContains("recipe-page"));
         Thread.sleep(1000);
-        WebElement adminLink = driver.findElement(By.id("admin-link"));
-        adminLink.click();
 
+        driver.findElement(By.id("admin-link")).click();
         Thread.sleep(1000);
 
         WebElement nameInput = driver.findElement(By.id("add-ingredient-name-input"));
         WebElement ingredientSubmitButton = driver.findElement(By.id("add-ingredient-submit-button"));
+
         nameInput.sendKeys("salt");
         ingredientSubmitButton.click();
         Thread.sleep(1000);
 
-        // Wait for the recipe list to update
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("ingredient-list")));
-        WebElement ingredientList = driver.findElement(By.id("ingredient-list"));
-        String innerHTML = ingredientList.getAttribute("innerHTML");
-
-        // Assert the result
+        String innerHTML = driver.findElement(By.id("ingredient-list")).getAttribute("innerHTML");
         assertTrue("Expected ingredient to be added.", innerHTML.contains("salt"));
 
-        WebElement backLink = driver.findElement(By.id("back-link"));
-        backLink.click();
+        driver.findElement(By.id("back-link")).click();
         Thread.sleep(1000);
 
         performLogout();
@@ -618,15 +598,10 @@ public class AdminTest {
     /**
      * The site should send a request to delete the ingredient when the delete
      * button is clicked.
-     * 
-     * @throws InterruptedException
      */
     @Test
     public void deleteIngredientDeleteTest() throws InterruptedException {
-        // go to relevant HTML page
-        File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
-        String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
-        driver.get(loginPath);
+        driver.get("http://localhost:8083/login/login-page.html");
 
         try {
             WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(2));
@@ -634,43 +609,34 @@ public class AdminTest {
             System.out.println("Dismissing leftover alert: " + alert.getText());
             alert.dismiss();
         } catch (Exception ignored) {
-            // No alert present — move on
         }
 
-        // perform login functionality
         WebElement usernameInput = driver.findElement(By.id("login-input"));
         WebElement passwordInput = driver.findElement(By.id("password-input"));
         WebElement loginButton = driver.findElement(By.id("login-button"));
+
         usernameInput.sendKeys("ChefTrevin");
         passwordInput.sendKeys("trevature");
         loginButton.click();
 
-        // ensure we navigate to appropriate webpage
-        wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-
-        // click on link to go to ingredients page
+        wait.until(ExpectedConditions.urlContains("recipe-page"));
         Thread.sleep(1000);
-        WebElement adminLink = driver.findElement(By.id("admin-link"));
-        adminLink.click();
 
+        driver.findElement(By.id("admin-link")).click();
         Thread.sleep(1000);
 
         WebElement nameInput = driver.findElement(By.id("delete-ingredient-name-input"));
         WebElement ingredientSubmitButton = driver.findElement(By.id("delete-ingredient-submit-button"));
+
         nameInput.sendKeys("tomato");
         ingredientSubmitButton.click();
         Thread.sleep(1000);
 
-        // Wait for the recipe list to update
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("ingredient-list")));
-        WebElement ingredientList = driver.findElement(By.id("ingredient-list"));
-        String innerHTML = ingredientList.getAttribute("innerHTML");
+        String innerHTML = driver.findElement(By.id("ingredient-list")).getAttribute("innerHTML");
+        assertFalse("Expected ingredient to be deleted.", innerHTML.contains("tomato"));
 
-        // Assert the result
-        assertTrue("Expected ingredient to NOT be added.", !innerHTML.contains("tomato"));
-
-        WebElement backLink = driver.findElement(By.id("back-link"));
-        backLink.click();
+        driver.findElement(By.id("back-link")).click();
         Thread.sleep(1000);
 
         performLogout();
