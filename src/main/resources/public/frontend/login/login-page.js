@@ -1,88 +1,67 @@
 /**
  * This script handles the login functionality for the Recipe Management Application.
  * It manages user authentication by sending login requests to the server and handling responses.
-*/
-const BASE_URL = "http://localhost:8081"; // backend URL
-
-/* 
- * TODO: Get references to DOM elements
- * - username input
- * - password input
- * - login button
- * - logout button (optional, for token testing)
  */
 
-/* 
- * TODO: Add click event listener to login button
- * - Call processLogin on click
- */
+// Get references to DOM elements
+const loginButton = document.getElementById("login-button");
+const usernameInput = document.getElementById("login-input");
+const passwordInput = document.getElementById("password-input");
+const logoutButton = document.getElementById("logout-button");
 
+// Add click event listener to the login button
+loginButton.onclick = processLogin;
 
 /**
- * TODO: Process Login Function
- * 
- * Requirements:
- * - Retrieve values from username and password input fields
- * - Construct a request body with { username, password }
- * - Configure request options for fetch (POST, JSON headers)
- * - Send request to /login endpoint
- * - Handle responses:
- *    - If 200: extract token and isAdmin from response text
- *      - Store both in sessionStorage
- *      - Redirect to recipe-page.html
- *    - If 401: alert user about incorrect login
- *    - For others: show generic alert
- * - Add try/catch to handle fetch/network errors
- * 
- * Hints:
- * - Use fetch with POST method and JSON body
- * - Use sessionStorage.setItem("key", value) to store auth token and admin flag
- * - Use `window.location.href` for redirection
+ * Handles the login process for the user by:
+ * - Retrieving user credentials
+ * - Sending a login request to the server
+ * - Processing the response based on the status code
  */
 async function processLogin() {
-    // TODO: Retrieve username and password from input fields
-    // - Trim input and validate that neither is empty
+  const username = usernameInput.value;
+  const password = passwordInput.value;
+  const requestBody = { username, password };
 
-    // TODO: Create a requestBody object with username and password
+  const requestOptions = {
+    method: "POST",
+    mode: "cors",
+    cache: "no-cache",
+    credentials: "same-origin",
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "*",
+    },
+    redirect: "follow",
+    referrerPolicy: "no-referrer",
+    body: JSON.stringify(requestBody),
+  };
 
-    const requestOptions = {
-        method: "POST",
-        mode: "cors",
-        cache: "no-cache",
-        credentials: "same-origin",
-        headers: {
-            "Content-Type": "application/json",
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Headers": "*"
-        },
-        redirect: "follow",
-        referrerPolicy: "no-referrer",
-        body: JSON.stringify(requestBody)
-    };
+  try {
+    const response = await fetch("http://localhost:8081/login", requestOptions);
 
-    try {
-        // TODO: Send POST request to http://localhost:8081/login using fetch with requestOptions
+    if (response.status === 200) {
+      const data = await response.text();
+      const authToken = data.split(" ")[0];
+      const isAdmin = data.split(" ")[1];
+      // Save the token in sessionStorage
+      sessionStorage.setItem("auth-token", authToken);
+      sessionStorage.setItem("is-admin", isAdmin);
 
-        // TODO: If response status is 200
-        // - Read the response as text
-        // - Response will be a space-separated string: "token123 true"
-        // - Split the string into token and isAdmin flag
-        // - Store both in sessionStorage using sessionStorage.setItem()
-
-        // TODO: Optionally show the logout button if applicable
-
-        // TODO: Add a small delay (e.g., 500ms) using setTimeout before redirecting
-        // - Use window.location.href to redirect to the recipe page
-
-        // TODO: If response status is 401
-        // - Alert the user with "Incorrect login!"
-
-        // TODO: For any other status code
-        // - Alert the user with a generic error like "Unknown issue!"
-
-    } catch (error) {
-        // TODO: Handle any network or unexpected errors
-        // - Log the error and alert the user
+      logoutButton.hidden = false;
+      // Add a small delay for the test to capture the token before redirection
+      setTimeout(() => {
+        // Redirect to the recipe page
+        window.location.href = "../recipe/recipe-page.html";
+      }, 500); // 500ms delay
+    } else if (response.status === 401) {
+      alert("Incorrect login!");
+    } else {
+      alert("Unknown issue!");
     }
+  } catch (error) {
+    console.error("Error during login process:", error);
+    alert("An error occurred. Please try again.");
+  }
 }
-

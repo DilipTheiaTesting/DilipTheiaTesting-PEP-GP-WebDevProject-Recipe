@@ -1,89 +1,121 @@
-/**
- * This script defines the add, view, and delete operations for Ingredient objects in the Recipe Management Application.
- */
-
 const BASE_URL = "http://localhost:8081"; // backend URL
 
-/* 
- * TODO: Get references to various DOM elements
- * - addIngredientNameInput
- * - deleteIngredientNameInput
- * - ingredientListContainer
- * - searchInput (optional for future use)
- * - adminLink (if visible conditionally)
- */
+// Get references to various DOM elements
+const addIngredientNameInput = document.getElementById('add-ingredient-name-input');
+const deleteIngredientNameInput = document.getElementById('delete-ingredient-name-input');
+const ingredientListContainer = document.getElementById('ingredient-list');
+const adminLink = document.getElementById('admin-link');
+let searchInput = document.getElementById("search-input");
 
-/* 
- * TODO: Attach 'onclick' events to:
- * - "add-ingredient-submit-button" → addIngredient()
- * - "delete-ingredient-submit-button" → deleteIngredient()
- */
 
-/*
- * TODO: Create an array to keep track of ingredients
- */
+// Attach 'onclick' events to buttons
+document.getElementById('add-ingredient-submit-button').onclick = addIngredient;
+document.getElementById('delete-ingredient-submit-button').onclick = deleteIngredient;
 
-/* 
- * TODO: On page load, call getIngredients()
- */
+let ingredients = [];
 
+// start off with full ingredient list
+getIngredients();
 
 /**
- * TODO: Add Ingredient Function
- * 
- * Requirements:
- * - Read and trim value from addIngredientNameInput
- * - Validate input is not empty
- * - Send POST request to /ingredients
- * - Include Authorization token from sessionStorage
- * - On success: clear input, call getIngredients() and refreshIngredientList()
- * - On failure: alert the user
+ * Function to add a new ingredient to the backend and refresh the list.
  */
 async function addIngredient() {
-    // Implement add ingredient logic here
+    const name = addIngredientNameInput.value.trim();
+    
+    if (name) {
+        fetch(`${BASE_URL}/ingredients`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Authorization': "Bearer " + sessionStorage.getItem("auth-token")
+             },
+            body: JSON.stringify(name),
+        })
+            .then((response) => {
+                
+                if (!response.ok) throw new Error("Failed to add ingredient.");
+            })
+            .then(async () => {
+                
+                await getIngredients();
+                refreshIngredientList(); // Ensure this completes
+                const ingredientList = document.getElementById("ingredient-list");
+                console.log("Current Ingredient List after refresh:", ingredientList.innerHTML);
+                addIngredientNameInput.value = '';
+            })
+            .catch((error) => alert(error.message));
+    } else {
+        alert("Please enter the ingredient name.");
+    }
 }
 
-
-/**
- * TODO: Get Ingredients Function
- * 
- * Requirements:
- * - Fetch all ingredients from backend
- * - Store result in `ingredients` array
- * - Call refreshIngredientList() to display them
- * - On error: alert the user
- */
 async function getIngredients() {
-    // Implement get ingredients logic here
+    try {
+        const response = await fetch(`${BASE_URL}/ingredients`);
+        ingredients = await response.json();
+        refreshIngredientList();
+    } catch (error) {
+        alert("Failed to fetch ingredients: " +  error);
+    }
 }
 
-
 /**
- * TODO: Delete Ingredient Function
- * 
- * Requirements:
- * - Read and trim value from deleteIngredientNameInput
- * - Search ingredientListContainer's <li> elements for matching name
- * - Determine ID based on index (or other backend logic)
- * - Send DELETE request to /ingredients/{id}
- * - On success: call getIngredients() and refreshIngredientList(), clear input
- * - On failure or not found: alert the user
+ * Function to delete a ingredient from the backend and refresh the list.
  */
 async function deleteIngredient() {
-    // Implement delete ingredient logic here
+    const name = deleteIngredientNameInput.value.trim();
+
+    // Find the ID of the ingredient to delete
+    let id = null;
+    const listItems = ingredientListContainer.getElementsByTagName('li');
+    for (let i = 0; i < listItems.length; i++) {
+        if (listItems[i].textContent.includes(name)) {
+            id = i + 1; // Ensure this matches your backend logic for ID
+            break;
+        }
+    }
+
+    if (!id) {
+        alert("Ingredient not found in the list.");
+        return;
+    }
+
+    try {
+        const token = sessionStorage.getItem("auth-token");
+
+        const response = await fetch(`${BASE_URL}/ingredients/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': "Bearer " + token
+            }
+        });
+
+        if (!response.ok) throw new Error(`Error deleting ingredient: ${response.statusText}`);
+
+        await getIngredients();
+        refreshIngredientList();
+        deleteIngredientNameInput.value = "";
+        
+        console.log("Ingredient deleted successfully.");
+    } catch (error) {
+        console.error("Error deleting ingredient:", error);
+        alert(error.message);
+    }
 }
 
-
 /**
- * TODO: Refresh Ingredient List Function
- * 
- * Requirements:
- * - Clear ingredientListContainer
- * - Loop through `ingredients` array
- * - For each ingredient:
- *   - Create <li> and inner <p> with ingredient name
- *   - Append to container
+ * Function to fetch and display the list of ingredients from the backend.
  */
 function refreshIngredientList() {
-    // Implement ingredient list rendering logic here
+    ingredientListContainer.innerHTML = "";
+
+    for(let i = 0; i < ingredients.length; i++){
+        let element = document.createElement("li");
+        let ptag = document.createElement("p");
+        ptag.innerText = ingredients[i].name;
+        element.appendChild(ptag);
+        ingredientListContainer.appendChild(element);
+    }
 }

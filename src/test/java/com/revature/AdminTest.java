@@ -1,6 +1,7 @@
 package com.revature;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.io.File;
 import java.time.Duration;
@@ -31,7 +32,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import io.javalin.Javalin;
 
 public class AdminTest {
-    
+
     private static WebDriver driver;
     private static WebDriverWait wait;
     private static Javalin app;
@@ -39,7 +40,12 @@ public class AdminTest {
     private static final Logger logger = Logger.getLogger(AdminTest.class.getName());
     private static Process httpServerProcess;
     private static String browserType;
-    
+
+    // TESTING
+
+    private static Javalin server;
+    private static final int PORT = 8083;
+
     // Architecture and system detection
     private static final String OS_NAME = System.getProperty("os.name").toLowerCase();
     private static final String OS_ARCH = System.getProperty("os.arch").toLowerCase();
@@ -52,34 +58,34 @@ public class AdminTest {
     public static void setUp() throws InterruptedException {
         try {
             printEnvironmentInfo();
-            
+
             // Start the backend programmatically
             int port = 8081;
             app = Main.main(new String[] { String.valueOf(port) });
-            
+
             // Detect browser and driver
             BrowserConfig browserConfig = detectBrowserAndDriver();
             browserType = browserConfig.browserType;
-            
+
             // Create WebDriver with appropriate configuration
             driver = createWebDriver(browserConfig);
-            
+
             // Initialize WebDriverWait
             wait = new WebDriverWait(driver, Duration.ofSeconds(30));
-            
+
             // Set timeouts
             driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(60));
             driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
-            
+
             js = (JavascriptExecutor) driver;
-            
+
             Thread.sleep(1000);
-            
+
         } catch (Exception e) {
             System.err.println("\n=== SETUP FAILED ===");
             System.err.println("Error: " + e.getMessage());
             e.printStackTrace();
-            
+
             cleanup();
             throw new RuntimeException("Setup failed", e);
         }
@@ -95,36 +101,35 @@ public class AdminTest {
 
     private static BrowserConfig detectBrowserAndDriver() {
         System.out.println("\n=== BROWSER AND DRIVER DETECTION ===");
-        
+
         // First check for driver in project's "driver" folder
         BrowserConfig projectDriverConfig = checkProjectDriverFolder();
         if (projectDriverConfig != null) {
             return projectDriverConfig;
         }
-        
+
         // Then check system-installed drivers
         BrowserConfig systemDriverConfig = checkSystemDrivers();
         if (systemDriverConfig != null) {
             return systemDriverConfig;
         }
-        
+
         throw new RuntimeException("No compatible browser driver found");
     }
-    
+
     private static BrowserConfig checkProjectDriverFolder() {
         File driverFolder = new File("driver");
         if (!driverFolder.exists() || !driverFolder.isDirectory()) {
             System.out.println("No 'driver' folder found in project root");
             return null;
         }
-        
+
         System.out.println("Found 'driver' folder, checking for executables...");
-        
+
         // Check for Edge driver first
-        String[] edgeDriverNames = IS_WINDOWS ? 
-            new String[]{"msedgedriver.exe", "edgedriver.exe"} :
-            new String[]{"msedgedriver", "edgedriver"};
-            
+        String[] edgeDriverNames = IS_WINDOWS ? new String[] { "msedgedriver.exe", "edgedriver.exe" }
+                : new String[] { "msedgedriver", "edgedriver" };
+
         for (String driverName : edgeDriverNames) {
             File driverFile = new File(driverFolder, driverName);
             if (driverFile.exists()) {
@@ -135,12 +140,10 @@ public class AdminTest {
                 }
             }
         }
-        
+
         // Check for Chrome driver
-        String[] chromeDriverNames = IS_WINDOWS ? 
-            new String[]{"chromedriver.exe"} :
-            new String[]{"chromedriver"};
-            
+        String[] chromeDriverNames = IS_WINDOWS ? new String[] { "chromedriver.exe" } : new String[] { "chromedriver" };
+
         for (String driverName : chromeDriverNames) {
             File driverFile = new File(driverFolder, driverName);
             if (driverFile.exists()) {
@@ -151,31 +154,31 @@ public class AdminTest {
                 }
             }
         }
-        
+
         System.out.println("No compatible drivers found in 'driver' folder");
         return null;
     }
-    
+
     private static BrowserConfig checkSystemDrivers() {
         System.out.println("Checking system-installed drivers...");
-        
+
         // Chrome driver paths
         String[] chromeDriverPaths = {
-            "/usr/bin/chromedriver",
-            "/usr/local/bin/chromedriver",
-            "/snap/bin/chromedriver",
-            System.getProperty("user.home") + "/.cache/selenium/chromedriver/linux64/chromedriver",
-            "/opt/chromedriver/chromedriver"
+                "/usr/bin/chromedriver",
+                "/usr/local/bin/chromedriver",
+                "/snap/bin/chromedriver",
+                System.getProperty("user.home") + "/.cache/selenium/chromedriver/linux64/chromedriver",
+                "/opt/chromedriver/chromedriver"
         };
-        
+
         if (IS_WINDOWS) {
-            chromeDriverPaths = new String[]{
-                "C:\\Program Files\\Google\\Chrome\\Application\\chromedriver.exe",
-                "C:\\ChromeDriver\\chromedriver.exe",
-                "chromedriver.exe"
+            chromeDriverPaths = new String[] {
+                    "C:\\Program Files\\Google\\Chrome\\Application\\chromedriver.exe",
+                    "C:\\ChromeDriver\\chromedriver.exe",
+                    "chromedriver.exe"
             };
         }
-        
+
         for (String driverPath : chromeDriverPaths) {
             File driverFile = new File(driverPath);
             if (driverFile.exists() && driverFile.canExecute()) {
@@ -183,14 +186,14 @@ public class AdminTest {
                 return new BrowserConfig("chrome", driverPath, findChromeBinary());
             }
         }
-        
+
         // Edge driver paths
         if (IS_WINDOWS) {
             String[] edgeDriverPaths = {
-                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedgedriver.exe",
-                "msedgedriver.exe"
+                    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedgedriver.exe",
+                    "msedgedriver.exe"
             };
-            
+
             for (String driverPath : edgeDriverPaths) {
                 File driverFile = new File(driverPath);
                 if (driverFile.exists() && driverFile.canExecute()) {
@@ -199,49 +202,49 @@ public class AdminTest {
                 }
             }
         }
-        
+
         return null;
     }
-    
+
     private static String findChromeBinary() {
         String[] chromePaths;
-        
+
         if (IS_WINDOWS) {
-            chromePaths = new String[]{
-                "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-                "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
+            chromePaths = new String[] {
+                    "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+                    "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe"
             };
         } else if (IS_MAC) {
-            chromePaths = new String[]{
-                "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+            chromePaths = new String[] {
+                    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
             };
         } else {
-            chromePaths = new String[]{
-                "/usr/bin/chromium-browser",
-                "/usr/bin/chromium",
-                "/usr/bin/google-chrome",
-                "/snap/bin/chromium"
+            chromePaths = new String[] {
+                    "/usr/bin/chromium-browser",
+                    "/usr/bin/chromium",
+                    "/usr/bin/google-chrome",
+                    "/snap/bin/chromium"
             };
         }
-        
+
         for (String path : chromePaths) {
             if (new File(path).exists()) {
                 System.out.println("Found Chrome binary: " + path);
                 return path;
             }
         }
-        
+
         System.out.println("Chrome binary not found, using default");
         return null;
     }
-    
+
     private static String findEdgeBinary() {
         if (IS_WINDOWS) {
             String[] edgePaths = {
-                "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
-                "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
+                    "C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe",
+                    "C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe"
             };
-            
+
             for (String path : edgePaths) {
                 if (new File(path).exists()) {
                     System.out.println("Found Edge binary: " + path);
@@ -249,11 +252,11 @@ public class AdminTest {
                 }
             }
         }
-        
+
         System.out.println("Edge binary not found, using default");
         return null;
     }
-    
+
     private static void makeExecutable(File file) {
         if (!file.canExecute()) {
             try {
@@ -264,110 +267,127 @@ public class AdminTest {
             }
         }
     }
-    
+
     private static WebDriver createWebDriver(BrowserConfig config) {
         System.out.println("\n=== CREATING WEBDRIVER ===");
         System.out.println("Browser: " + config.browserType);
         System.out.println("Driver: " + config.driverPath);
         System.out.println("Binary: " + config.binaryPath);
-        
+
         if ("edge".equals(config.browserType)) {
             return createEdgeDriver(config);
         } else {
             return createChromeDriver(config);
         }
     }
-    
+
     private static WebDriver createChromeDriver(BrowserConfig config) {
         System.setProperty("webdriver.chrome.driver", config.driverPath);
-        
+
         ChromeOptions options = new ChromeOptions();
-        
+
         if (config.binaryPath != null) {
             options.setBinary(config.binaryPath);
         }
-        
+
         options.addArguments(getChromeArguments());
-        
+
         LoggingPreferences logPrefs = new LoggingPreferences();
         logPrefs.enable(LogType.BROWSER, Level.ALL);
         options.setCapability("goog:loggingPrefs", logPrefs);
-        
+
         ChromeDriverService.Builder serviceBuilder = new ChromeDriverService.Builder()
-            .usingDriverExecutable(new File(config.driverPath))
-            .withTimeout(Duration.ofSeconds(30));
-        
+                .usingDriverExecutable(new File(config.driverPath))
+                .withTimeout(Duration.ofSeconds(30));
+
         ChromeDriverService service = serviceBuilder.build();
-        
+
         return new ChromeDriver(service, options);
     }
-    
+
     private static WebDriver createEdgeDriver(BrowserConfig config) {
         System.setProperty("webdriver.edge.driver", config.driverPath);
-        
+
         EdgeOptions options = new EdgeOptions();
-        
+
         if (config.binaryPath != null) {
             options.setBinary(config.binaryPath);
         }
-        
+
         options.addArguments(getEdgeArguments());
-        
+
         LoggingPreferences logPrefs = new LoggingPreferences();
         logPrefs.enable(LogType.BROWSER, Level.ALL);
         options.setCapability("ms:loggingPrefs", logPrefs);
-        
+
         EdgeDriverService.Builder serviceBuilder = new EdgeDriverService.Builder()
-            .usingDriverExecutable(new File(config.driverPath))
-            .withTimeout(Duration.ofSeconds(30));
-        
+                .usingDriverExecutable(new File(config.driverPath))
+                .withTimeout(Duration.ofSeconds(30));
+
         EdgeDriverService service = serviceBuilder.build();
-        
+
         return new EdgeDriver(service, options);
     }
-    
+
     private static String[] getChromeArguments() {
         return getCommonBrowserArguments();
     }
-    
+
     private static String[] getEdgeArguments() {
         return getCommonBrowserArguments();
     }
-    
+
     private static String[] getCommonBrowserArguments() {
         String[] baseArgs = {
-            "--headless=new",
-            "--no-sandbox",
-            "--disable-dev-shm-usage",
-            "--disable-gpu",
-            "--window-size=1920,1080",
-            "--disable-extensions",
-            "--disable-web-security",
-            "--allow-file-access-from-files",
-            "--allow-running-insecure-content",
-            "--user-data-dir=/tmp/browser-test-" + System.currentTimeMillis(),
-            "--disable-features=TranslateUI,VizDisplayCompositor",
-            "--disable-background-timer-throttling",
-            "--disable-backgrounding-occluded-windows",
-            "--disable-renderer-backgrounding"
+                "--headless=new",
+                "--no-sandbox",
+                "--disable-dev-shm-usage",
+                "--disable-gpu",
+                "--window-size=1920,1080",
+                "--disable-extensions",
+                "--disable-web-security",
+                "--allow-file-access-from-files",
+                "--allow-running-insecure-content",
+                "--user-data-dir=/tmp/browser-test-" + System.currentTimeMillis(),
+                "--disable-features=TranslateUI,VizDisplayCompositor",
+                "--disable-background-timer-throttling",
+                "--disable-backgrounding-occluded-windows",
+                "--disable-renderer-backgrounding"
         };
-        
+
         if (IS_ARM) {
             String[] armArgs = {
-                "--disable-features=VizDisplayCompositor",
-                "--use-gl=swiftshader",
-                "--disable-software-rasterizer"
+                    "--disable-features=VizDisplayCompositor",
+                    "--use-gl=swiftshader",
+                    "--disable-software-rasterizer"
             };
-            
+
             String[] combined = new String[baseArgs.length + armArgs.length];
             System.arraycopy(baseArgs, 0, combined, 0, baseArgs.length);
             System.arraycopy(armArgs, 0, combined, baseArgs.length, armArgs.length);
             return combined;
         }
-        
+
         return baseArgs;
     }
-    
+
+    // NEW SERVER FUNCTIONS
+
+    @BeforeClass
+    public static void startServer() {
+        try {
+            System.out.println("Starting local static web server for frontend files...");
+            server = Javalin.create(config -> {
+                // Serve everything from /src/main/resources/public/frontend/
+                config.staticFiles.add("/public/frontend");
+            }).start(PORT);
+            System.out.println("✅ Server running at: http://localhost:" + PORT);
+        } catch (Exception e) {
+            System.err.println("⚠️ Failed to start Javalin server: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
     private static void cleanup() {
         if (app != null) {
             app.stop();
@@ -388,16 +408,30 @@ public class AdminTest {
         cleanup();
         System.out.println("Teardown completed");
     }
-    
+
     private static class BrowserConfig {
         final String browserType;
         final String driverPath;
         final String binaryPath;
-        
+
         BrowserConfig(String browserType, String driverPath, String binaryPath) {
             this.browserType = browserType;
             this.driverPath = driverPath;
             this.binaryPath = binaryPath;
+        }
+    }
+
+    // NEW FUNCTION
+
+    @AfterClass
+    public static void stopServer() {
+        try {
+            if (server != null) {
+                server.stop();
+                System.out.println("🛑 Javalin server stopped successfully.");
+            }
+        } catch (Exception e) {
+            System.err.println("⚠️ Error stopping Javalin server: " + e.getMessage());
         }
     }
 
@@ -408,53 +442,56 @@ public class AdminTest {
 
     /**
      * Admin link should not exist when the logged-in user is not an admin.
+     * 
      * @throws InterruptedException
      */
+
     @Test
-    public void noAdminNoLinkTest() throws InterruptedException{
-        // go to relevant HTML page
-        File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
-        String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
-        driver.get(loginPath);
+    public void noAdminNoLinkTest() throws InterruptedException {
+        // 1️⃣ Go to login page served by Javalin instead of file:///
+        driver.get("http://localhost:8083/login/login-page.html");
 
-
+        // 2️⃣ Handle leftover alert, if present
         try {
-    WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(2));
-    Alert alert = shortWait.until(ExpectedConditions.alertIsPresent());
-    System.out.println("Dismissing leftover alert: " + alert.getText());
-    alert.dismiss();
-} catch (Exception ignored) {
-    // No alert present — move on
-}
+            WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(2));
+            Alert alert = shortWait.until(ExpectedConditions.alertIsPresent());
+            System.out.println("Dismissing leftover alert: " + alert.getText());
+            alert.dismiss();
+        } catch (Exception ignored) {
+            // No alert present — continue
+        }
 
-        // perform login functionality
+        // 3️⃣ Perform login as non-admin user
         WebElement usernameInput = driver.findElement(By.id("login-input"));
         WebElement passwordInput = driver.findElement(By.id("password-input"));
         WebElement loginButton = driver.findElement(By.id("login-button"));
+
         usernameInput.sendKeys("JoeCool");
         passwordInput.sendKeys("redbarron");
         loginButton.click();
 
-        // ensure we navigate to appropriate webpage
-        wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-    
-        // check that role value is 'false' in session storage
-        assertTrue((js.executeScript(String.format(
-            "return window.sessionStorage.getItem('%s');", "is-admin")).equals("false")));
-        
-        WebElement adminLink = driver.findElement(By.id("admin-link"));
-        //verify that there are no admin links because the user is not an admin.
-        Assert.assertFalse(adminLink.isDisplayed());
+        // 4️⃣ Wait for navigation to recipe page
+        wait.until(ExpectedConditions.urlContains("recipe-page"));
 
+        // 5️⃣ Verify the role is false in session storage
+        String isAdmin = (String) js.executeScript("return window.sessionStorage.getItem('is-admin');");
+        assertEquals("false", isAdmin);
+
+        // 6️⃣ Verify admin link is hidden
+        WebElement adminLink = driver.findElement(By.id("admin-link"));
+        Assert.assertFalse("Admin link should not be visible to non-admins", adminLink.isDisplayed());
+
+        // 7️⃣ Perform logout
         performLogout();
     }
 
     /**
      * Admin link should exist when the logged-in user is an admin.
+     * 
      * @throws InterruptedException
      */
     @Test
-    public void adminLinkTest() throws InterruptedException{
+    public void adminLinkTest() throws InterruptedException {
         // go to relevant HTML page
         File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
         String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
@@ -470,23 +507,24 @@ public class AdminTest {
 
         // ensure we navigate to appropriate webpage
         wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-    
+
         // check that role value is 'false' in session storage
         assertTrue((js.executeScript(String.format(
-            "return window.sessionStorage.getItem('%s');", "is-admin")).equals("true")));
-        
+                "return window.sessionStorage.getItem('%s');", "is-admin")).equals("true")));
+
         WebElement adminLink = driver.findElement(By.id("admin-link"));
-        //verify that there are no admin links because the user is not an admin.
+        // verify that there are no admin links because the user is not an admin.
         Assert.assertTrue(adminLink.isDisplayed());
 
         performLogout();
     }
 
     /**
-     * On startup, the site should pull the currently available ingredients from the API.
+     * On startup, the site should pull the currently available ingredients from the
+     * API.
      */
     @Test
-    public void displayIngredientsOnInitTest() throws InterruptedException{
+    public void displayIngredientsOnInitTest() throws InterruptedException {
         // go to relevant HTML page
         File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
         String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
@@ -502,7 +540,7 @@ public class AdminTest {
 
         // ensure we navigate to appropriate webpage
         wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-    
+
         // click on link to go to ingredients page
         Thread.sleep(1000);
         WebElement adminLink = driver.findElement(By.id("admin-link"));
@@ -526,11 +564,13 @@ public class AdminTest {
     }
 
     /**
-     * The site should send a request to persist the ingredient after the recipe is submitted.
+     * The site should send a request to persist the ingredient after the recipe is
+     * submitted.
+     * 
      * @throws InterruptedException
      */
     @Test
-    public void addIngredientPostTest() throws InterruptedException{
+    public void addIngredientPostTest() throws InterruptedException {
         // go to relevant HTML page
         File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
         String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
@@ -546,14 +586,14 @@ public class AdminTest {
 
         // ensure we navigate to appropriate webpage
         wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-    
+
         // click on link to go to ingredients page
         Thread.sleep(1000);
         WebElement adminLink = driver.findElement(By.id("admin-link"));
         adminLink.click();
 
         Thread.sleep(1000);
-        
+
         WebElement nameInput = driver.findElement(By.id("add-ingredient-name-input"));
         WebElement ingredientSubmitButton = driver.findElement(By.id("add-ingredient-submit-button"));
         nameInput.sendKeys("salt");
@@ -576,11 +616,13 @@ public class AdminTest {
     }
 
     /**
-     * The site should send a request to delete the ingredient when the delete button is clicked.
+     * The site should send a request to delete the ingredient when the delete
+     * button is clicked.
+     * 
      * @throws InterruptedException
      */
     @Test
-    public void deleteIngredientDeleteTest() throws InterruptedException{
+    public void deleteIngredientDeleteTest() throws InterruptedException {
         // go to relevant HTML page
         File loginFile = new File("src/main/resources/public/frontend/login/login-page.html");
         String loginPath = "file:///" + loginFile.getAbsolutePath().replace("\\", "/");
@@ -605,20 +647,20 @@ public class AdminTest {
 
         // ensure we navigate to appropriate webpage
         wait.until(ExpectedConditions.urlContains("recipe-page")); // Wait for navigation to the recipe page
-    
+
         // click on link to go to ingredients page
         Thread.sleep(1000);
         WebElement adminLink = driver.findElement(By.id("admin-link"));
         adminLink.click();
 
         Thread.sleep(1000);
-        
+
         WebElement nameInput = driver.findElement(By.id("delete-ingredient-name-input"));
         WebElement ingredientSubmitButton = driver.findElement(By.id("delete-ingredient-submit-button"));
         nameInput.sendKeys("tomato");
         ingredientSubmitButton.click();
         Thread.sleep(1000);
-        
+
         // Wait for the recipe list to update
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("ingredient-list")));
         WebElement ingredientList = driver.findElement(By.id("ingredient-list"));
