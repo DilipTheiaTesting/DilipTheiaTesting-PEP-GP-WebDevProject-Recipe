@@ -65,6 +65,14 @@ public class AdminTest {
             int port = 8081;
             app = Main.main(new String[] { String.valueOf(port) });
 
+            // Starting the static Javalin Server
+
+            System.out.println("Starting local static web server for frontend files...");
+            server = Javalin.create(config -> {
+                config.staticFiles.add("/public/frontend");
+            }).start(PORT);
+            System.out.println("Static server running at: http://localhost:" + PORT);
+
             // Detect browser and driver
             BrowserConfig browserConfig = detectBrowserAndDriver();
             browserType = browserConfig.browserType;
@@ -373,23 +381,6 @@ public class AdminTest {
         return baseArgs;
     }
 
-    // NEW SERVER FUNCTIONS
-
-    @BeforeClass
-    public static void startServer() {
-        try {
-            System.out.println("Starting local static web server for frontend files...");
-            server = Javalin.create(config -> {
-                // Serve everything from /src/main/resources/public/frontend/
-                config.staticFiles.add("/public/frontend");
-            }).start(PORT);
-            System.out.println("✅ Server running at: http://localhost:" + PORT);
-        } catch (Exception e) {
-            System.err.println("⚠️ Failed to start Javalin server: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
     private static void cleanup() {
         if (app != null) {
             app.stop();
@@ -430,10 +421,10 @@ public class AdminTest {
         try {
             if (server != null) {
                 server.stop();
-                System.out.println("🛑 Javalin server stopped successfully.");
+                System.out.println("Javalin server stopped successfully.");
             }
         } catch (Exception e) {
-            System.err.println("⚠️ Error stopping Javalin server: " + e.getMessage());
+            System.err.println("Error stopping Javalin server: " + e.getMessage());
         }
     }
 
@@ -450,10 +441,9 @@ public class AdminTest {
 
     @Test
     public void noAdminNoLinkTest() throws InterruptedException {
-        // 1️⃣ Go to login page served by Javalin instead of file:///
+
         driver.get("http://localhost:8083/login/login-page.html");
 
-        // 2️⃣ Handle leftover alert, if present
         try {
             WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(2));
             Alert alert = shortWait.until(ExpectedConditions.alertIsPresent());
@@ -463,7 +453,6 @@ public class AdminTest {
             // No alert present — continue
         }
 
-        // 3️⃣ Perform login as non-admin user
         WebElement usernameInput = driver.findElement(By.id("login-input"));
         WebElement passwordInput = driver.findElement(By.id("password-input"));
         WebElement loginButton = driver.findElement(By.id("login-button"));
@@ -472,18 +461,17 @@ public class AdminTest {
         passwordInput.sendKeys("redbarron");
         loginButton.click();
 
-        // 4️⃣ Wait for navigation to recipe page
+
         wait.until(ExpectedConditions.urlContains("recipe-page"));
 
-        // 5️⃣ Verify the role is false in session storage
         String isAdmin = (String) js.executeScript("return window.sessionStorage.getItem('is-admin');");
         assertEquals("false", isAdmin);
 
-        // 6️⃣ Verify admin link is hidden
+
         WebElement adminLink = driver.findElement(By.id("admin-link"));
         Assert.assertFalse("Admin link should not be visible to non-admins", adminLink.isDisplayed());
 
-        // 7️⃣ Perform logout
+
         performLogout();
     }
 
