@@ -1,9 +1,13 @@
 package com.revature;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+// import org.junit.AfterClass;
+import org.junit.jupiter.api.AfterAll;
+// import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
+// import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
+// import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.time.Duration;
 import java.util.Arrays;
@@ -44,7 +48,7 @@ public class RecipePageTest {
     private static final boolean IS_LINUX = OS_NAME.contains("linux");
     private static final boolean IS_MAC = OS_NAME.contains("mac");
   
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws Exception {
         try {
             printEnvironmentInfo();
@@ -548,7 +552,7 @@ public class RecipePageTest {
         }
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDown() {
         System.out.println("\n=== TEARDOWN ===");
         cleanup();
@@ -756,3 +760,4 @@ public class RecipePageTest {
         Assert.assertTrue(searchButton.getTagName().equals("button"));
     }
 }
+
