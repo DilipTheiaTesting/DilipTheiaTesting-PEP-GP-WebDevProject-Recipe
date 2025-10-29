@@ -544,12 +544,12 @@ public class AdminTest {
         // Assert.assertTrue(innerHTML.contains("lemon"));
         // Assert.assertTrue(innerHTML.contains("rice"));
         // Assert.assertTrue(innerHTML.contains("stone"));
-        Assertions.assertTrue(innerString.contains("carrot"));
-        Assertions.assertTrue(innerString.contains("potato"));
-        Assertions.assertTrue(innerString.contains("tomato"));
-        Assertions.assertTrue(innerString.contains("lemon"));
-        Assertions.assertTrue(innerString.contains("rice"));
-        Assertions.assertTrue(innerString.contains("stone"));
+        Assertions.assertTrue(innerHTML.contains("carrot"));
+        Assertions.assertTrue(innerHTML.contains("potato"));
+        Assertions.assertTrue(innerHTML.contains("tomato"));
+        Assertions.assertTrue(innerHTML.contains("lemon"));
+        Assertions.assertTrue(innerHTML.contains("rice"));
+        Assertions.assertTrue(innerHTML.contains("stone"));
 
         driver.findElement(By.id("back-link")).click();
         Thread.sleep(1000);
@@ -644,4 +644,5 @@ public class AdminTest {
     }
 
 }
+
 
