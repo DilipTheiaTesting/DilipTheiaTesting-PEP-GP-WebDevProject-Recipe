@@ -11,10 +11,14 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+// import org.junit.AfterClass; 
+import org.junit.jupiter.api.AfterAll;
+// import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
+// import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
+// import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -395,7 +399,8 @@ public class AdminTest {
         }
     }
 
-    @AfterClass
+    // @AfterClass
+    @AfterAll
     public static void tearDown() {
         System.out.println("\n=== TEARDOWN ===");
         cleanup();
@@ -469,7 +474,8 @@ public class AdminTest {
 
 
         WebElement adminLink = driver.findElement(By.id("admin-link"));
-        Assert.assertFalse("Admin link should not be visible to non-admins", adminLink.isDisplayed());
+        //Assert
+        Assertions.assertFalse("Admin link should not be visible to non-admins", adminLink.isDisplayed());
 
 
         performLogout();
@@ -501,7 +507,8 @@ public class AdminTest {
         assertEquals("true", isAdmin);
 
         WebElement adminLink = driver.findElement(By.id("admin-link"));
-        Assert.assertTrue(adminLink.isDisplayed());
+        // Assert
+        Assertions.assertTrue(adminLink.isDisplayed());
 
         performLogout();
     }
@@ -531,12 +538,18 @@ public class AdminTest {
         WebElement list = driver.findElement(By.id("ingredient-list"));
         String innerHTML = list.getAttribute("innerHTML");
 
-        Assert.assertTrue(innerHTML.contains("carrot"));
-        Assert.assertTrue(innerHTML.contains("potato"));
-        Assert.assertTrue(innerHTML.contains("tomato"));
-        Assert.assertTrue(innerHTML.contains("lemon"));
-        Assert.assertTrue(innerHTML.contains("rice"));
-        Assert.assertTrue(innerHTML.contains("stone"));
+        // Assert.assertTrue(innerHTML.contains("carrot"));
+        // Assert.assertTrue(innerHTML.contains("potato"));
+        // Assert.assertTrue(innerHTML.contains("tomato"));
+        // Assert.assertTrue(innerHTML.contains("lemon"));
+        // Assert.assertTrue(innerHTML.contains("rice"));
+        // Assert.assertTrue(innerHTML.contains("stone"));
+        Assertions.assertTrue(innerString.contains("carrot"));
+        Assertions.assertTrue(innerString.contains("potato"));
+        Assertions.assertTrue(innerString.contains("tomato"));
+        Assertions.assertTrue(innerString.contains("lemon"));
+        Assertions.assertTrue(innerString.contains("rice"));
+        Assertions.assertTrue(innerString.contains("stone"));
 
         driver.findElement(By.id("back-link")).click();
         Thread.sleep(1000);
@@ -631,3 +644,4 @@ public class AdminTest {
     }
 
 }
+
