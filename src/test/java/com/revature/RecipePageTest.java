@@ -756,8 +756,8 @@ public class RecipePageTest {
     public void searchBarExistsTest() {
         WebElement searchInput = webDriver.findElement(By.id("search-input"));
         WebElement searchButton = webDriver.findElement(By.id("search-button"));
-        Assert.assertTrue(searchInput.getTagName().equals("input"));
-        Assert.assertTrue(searchButton.getTagName().equals("button"));
+        Assertions.assertTrue(searchInput.getTagName().equals("input"));
+        Assertions.assertTrue(searchButton.getTagName().equals("button"));
     }
 }
 
