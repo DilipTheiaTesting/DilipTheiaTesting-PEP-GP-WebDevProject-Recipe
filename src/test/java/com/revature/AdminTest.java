@@ -60,7 +60,7 @@ public class AdminTest {
     private static final boolean IS_LINUX = OS_NAME.contains("linux");
     private static final boolean IS_MAC = OS_NAME.contains("mac");
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() throws InterruptedException {
         try {
             printEnvironmentInfo();
@@ -421,7 +421,7 @@ public class AdminTest {
 
     // NEW FUNCTION
 
-    @AfterClass
+    @AfterAll
     public static void stopServer() {
         try {
             if (server != null) {
@@ -475,7 +475,7 @@ public class AdminTest {
 
         WebElement adminLink = driver.findElement(By.id("admin-link"));
         //Assert
-        Assertions.assertFalse("Admin link should not be visible to non-admins", adminLink.isDisplayed());
+        Assertions.assertFalse(adminLink.isDisplayed());
 
 
         performLogout();
@@ -644,5 +644,6 @@ public class AdminTest {
     }
 
 }
+
 
 
