@@ -8,9 +8,12 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+// import org.junit.After;
+import org.junit.jupiter.api.AfterEach;
+// import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
+// import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockserver.client.MockServerClient;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.HttpRequest;
@@ -47,7 +50,8 @@ public class LoginTest {
     private static final boolean IS_LINUX = OS_NAME.contains("linux");
     private static final boolean IS_MAC = OS_NAME.contains("mac");
 
-    @Before
+    // @Before
+    @BeforeEach
     public void setUp() throws InterruptedException {
         try {
             printEnvironmentInfo();
@@ -632,7 +636,8 @@ public class LoginTest {
         assertTrue(driver.getCurrentUrl().contains("login"));
     }
 
-    @After
+    // @After
+    @AfterEach
     public void tearDown() {
         System.out.println("\n=== TEARDOWN ===");
         cleanup();
@@ -652,3 +657,4 @@ public class LoginTest {
         }
     }
 }
+
